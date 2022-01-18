@@ -16,9 +16,10 @@ func main() {
 
 	routes.SetUp(app)
 
-	app.Use(cors.Config{
-		AllowCredentials: true,
-	})
+	app.Use(cors.New(
+		cors.Config{
+			AllowCredentials: true,
+		}))
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
