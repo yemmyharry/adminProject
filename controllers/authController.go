@@ -104,8 +104,23 @@ func User(c *fiber.Ctx) error {
 	database.DB.Where("id = ?", claims.Subject).First(&user)
 
 	return c.JSON(fiber.Map{
-		"message": "Successfully logged in",
-		"user":    user,
+		"user": user,
+	})
+
+}
+
+func Logout(c *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
+
+	return c.JSON(fiber.Map{
+		"message": "Successfully logged out",
 	})
 
 }
