@@ -86,16 +86,9 @@ func Login(c *fiber.Ctx) error {
 func User(c *fiber.Ctx) error {
 	cookie := c.Cookies("token")
 
-	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte("secret"), nil
 	})
-
-	if err != nil || !token.Valid {
-		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid token",
-		})
-	}
 
 	claims := token.Claims.(*jwt.StandardClaims)
 
@@ -123,4 +116,45 @@ func Logout(c *fiber.Ctx) error {
 		"message": "Successfully logged out",
 	})
 
+}
+
+func UpdateUser(c *fiber.Ctx) error {
+	var data map[string]string
+
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(503).JSON(fiber.Map{"message": "Error parsing body"})
+	}
+
+	cookie := c.Cookies("token")
+
+	token, _ := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte("secret"), nil
+	})
+
+	claims := token.Claims.(*jwt.StandardClaims)
+
+	var user models.User
+
+	database.DB.Where("id = ?", claims.Subject).First(&user)
+
+	if user.ID == 0 {
+		return c.Status(503).JSON(fiber.Map{"message": "User not found"})
+	}
+
+	if data["password"] != data["confirm_password"] {
+		return c.Status(503).JSON(fiber.Map{"message": "Passwords do not match"})
+	}
+
+	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), bcrypt.DefaultCost)
+
+	user.FirstName = data["first_name"]
+	user.LastName = data["last_name"]
+	user.Email = data["email"]
+	user.Password = password
+
+	database.DB.Save(&user)
+
+	return c.JSON(fiber.Map{
+		"message": "Successfully updated user",
+	})
 }
