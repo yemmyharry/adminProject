@@ -20,6 +20,9 @@ func SetUp(app *fiber.App) {
 			authenticatedRoute.Get("/admin/ambassador", controllers.Ambassadors)
 			authenticatedRoute.Get("/admin/products", controllers.Products)
 			authenticatedRoute.Post("/admin/products", controllers.CreateProduct)
+			authenticatedRoute.Get("/admin/products/:id", controllers.GetProduct)
+			authenticatedRoute.Put("/admin/products/:id", controllers.UpdateProduct)
+			authenticatedRoute.Delete("/admin/products/:id", controllers.DeleteProduct)
 		}
 	}
 }
